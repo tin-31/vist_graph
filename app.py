@@ -68,7 +68,7 @@ def load_all_assets():
     pca_obj = joblib.load('gene_pca_model.pkl') if os.path.exists('gene_pca_model.pkl') else None
 
     # 4. Gene Name Mapping (Để hiện tên BRCA1, TP53...)
-    map_id = '1FnFnDRYh43N89nkXucNiA2d9os5YGLvj'
+    map_id = '1h0UgTQqA71UCRlvsHrAyVqNeLS1UEdAu'
     if map_id != 'ID_FILE_GENE_NAMES_MAPPING_CỦA_BẠN' and not os.path.exists('gene_names_mapping.pkl'):
         gdown.download(f'https://drive.google.com/uc?id={map_id}', 'gene_names_mapping.pkl', quiet=False)
     gene_map = joblib.load('gene_names_mapping.pkl') if os.path.exists('gene_names_mapping.pkl') else None
