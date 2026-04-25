@@ -1,0 +1,11 @@
+streamlit
+gdown
+torch
+torch-geometric
+torch-scatter
+torch-sparse
+opencv-python-headless
+scanpy
+numpy
+pandas
+matplotlib
