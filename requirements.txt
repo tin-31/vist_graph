@@ -1,8 +1,7 @@
---extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.2.2
+https://download.pytorch.org/whl/cpu/torch-2.2.2%2Bcpu-cp310-cp310-linux_x86_64.whl
 torch-geometric
-torch-scatter -f https://data.pyg.org/whl/torch-2.2.2+cpu.html
-torch-sparse -f https://data.pyg.org/whl/torch-2.2.2+cpu.html
+https://data.pyg.org/whl/torch-2.2.0%2Bcpu/torch_scatter-2.1.2%2Bpt22cpu-cp310-cp310-linux_x86_64.whl
+https://data.pyg.org/whl/torch-2.2.0%2Bcpu/torch_sparse-0.6.18%2Bpt22cpu-cp310-cp310-linux_x86_64.whl
 streamlit
 gdown
 opencv-python-headless
