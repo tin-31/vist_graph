@@ -11,7 +11,7 @@ st.title("🔬 ViST-Graph: Dự đoán Hệ phiên mã không gian từ ảnh H&
 # 2. Tải Model từ Google Drive
 @st.cache_resource # Dùng cache để không phải tải lại mỗi lần load trang
 def load_model_from_drive():
-    file_id = 'YOUR_FILE_ID_HERE' # Thay FILE_ID của bạn vào đây
+    file_id = '1rouQFhzqrrB9jdQ2otqD9-DvVJ2Us_Qb' # Thay FILE_ID của bạn vào đây
     url = f'https://drive.google.com/uc?id={file_id}'
     output = 'model_vist_graph.pth'
     if not os.path.exists(output):
