@@ -61,7 +61,7 @@ def load_ai_models():
     resnet.eval()
 
     # 2. Tải mô hình ViST-Graph từ Drive
-    file_id = '1rouQFhzqrrB9jdQ2otqD9-DvVJ2Us_Qb' 
+    file_id = '1bSRncH0wWJki2b8ghBWIWpO0TilG_JGY' 
     url = f'https://drive.google.com/uc?id={file_id}'
     output = 'best_vist_model.pth'
     
