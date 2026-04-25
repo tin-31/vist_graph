@@ -64,7 +64,7 @@ def load_all_assets():
     gcn.eval()
 
     # 3. Tải Chìa khóa PCA (gene_pca_model.pkl) để giải mã Top 10 Gene
-    pca_id = 'THAY_ID_FILE_PKL_CỦA_BẠN_VÀO_ĐÂY' 
+    pca_id = '1wMMF7PxxVG5RkvfYhgGrbavKcC9mtNp8' 
     pca_path = 'gene_pca_model.pkl'
     pca_obj = None
     if pca_id != 'THAY_ID_FILE_PKL_CỦA_BẠN_VÀO_ĐÂY':
