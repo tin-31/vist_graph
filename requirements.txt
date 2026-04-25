@@ -1,9 +1,10 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.2.2
+torch-geometric
+torch-scatter -f https://data.pyg.org/whl/torch-2.2.2+cpu.html
+torch-sparse -f https://data.pyg.org/whl/torch-2.2.2+cpu.html
 streamlit
 gdown
-torch
-torch-geometric
-torch-scatter
-torch-sparse
 opencv-python-headless
 scanpy
 numpy
