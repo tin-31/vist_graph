@@ -40,11 +40,21 @@ class ViST_GCN(nn.Module):
         return x
 
 # ==========================================
-# KHU VỰC 2: TẢI TẤT CẢ TÀI SẢN (ASSETS) TỪ DRIVE
+# KHU VỰC 2: THIẾT LẬP GIAO DIỆN & TẢI TÀI SẢN
 # ==========================================
-st.set_page_config(page_title="ViST-Graph Analysis", page_icon="🔬", layout="wide")
-st.title("🔬 ViST-Graph: Phân tích Hệ phiên mã Không gian")
-st.markdown("**Sản phẩm dự thi Hội thi Tin học trẻ toàn quốc (Bảng D3)**")
+st.set_page_config(page_title="ViST-Graph | Spatial Transcriptomics", page_icon="🧬", layout="wide")
+
+# CSS tùy chỉnh để làm giao diện chuyên nghiệp hơn
+st.markdown("""
+    <style>
+    .main-header { font-size: 2.2rem; font-weight: 700; color: #1E3A8A; margin-bottom: 0;}
+    .sub-header { font-size: 1.1rem; color: #64748B; margin-bottom: 2rem;}
+    .stSpinner > div > div { border-color: #1E3A8A transparent transparent transparent; }
+    </style>
+""", unsafe_allow_html=True)
+
+st.markdown('<p class="main-header">🧬 Hệ thống ViST-Graph</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-header">Nền tảng phân tích Hệ phiên mã không gian ảo từ ảnh Mô bệnh học H&E</p>', unsafe_allow_html=True)
 
 @st.cache_resource 
 def load_all_assets():
@@ -53,7 +63,7 @@ def load_all_assets():
     resnet = nn.Sequential(*list(resnet.children())[:-1])
     resnet.eval()
 
-    # 2. GCN Model (Sửa ID nếu thay đổi)
+    # 2. GCN Model
     model_id = '1bSRncH0wWJki2b8ghBWIWpO0TilG_JGY'
     if not os.path.exists('best_vist_model.pth'):
         gdown.download(f'https://drive.google.com/uc?id={model_id}', 'best_vist_model.pth', quiet=False)
@@ -61,13 +71,13 @@ def load_all_assets():
     gcn.load_state_dict(torch.load('best_vist_model.pth', map_location='cpu'))
     gcn.eval()
 
-    # 3. PCA Key (Để giải mã Metagene)
+    # 3. PCA Key
     pca_id = '1wMMF7PxxVG5RkvfYhgGrbavKcC9mtNp8' 
     if pca_id != 'ID_FILE_GENE_PCA_MODEL_CỦA_BẠN' and not os.path.exists('gene_pca_model.pkl'):
         gdown.download(f'https://drive.google.com/uc?id={pca_id}', 'gene_pca_model.pkl', quiet=False)
     pca_obj = joblib.load('gene_pca_model.pkl') if os.path.exists('gene_pca_model.pkl') else None
 
-    # 4. Gene Name Mapping (Để hiện tên BRCA1, TP53...)
+    # 4. Gene Name Mapping
     map_id = '1h0UgTQqA71UCRlvsHrAyVqNeLS1UEdAu'
     if map_id != 'ID_FILE_GENE_NAMES_MAPPING_CỦA_BẠN' and not os.path.exists('gene_names_mapping.pkl'):
         gdown.download(f'https://drive.google.com/uc?id={map_id}', 'gene_names_mapping.pkl', quiet=False)
@@ -101,42 +111,58 @@ def run_pipeline(image_pil, grid_size=6):
     return x, edge_index
 
 # ==========================================
-# KHU VỰC 4: GIAO DIỆN & CHẨN ĐOÁN CHI TIẾT
+# KHU VỰC 4: XỬ LÝ NGHIỆP VỤ & GIAO DIỆN CHÍNH
 # ==========================================
-uploaded_file = st.sidebar.file_uploader("Tải lên ảnh H&E", type=["jpg", "png"])
+# Quản lý trạng thái bộ nhớ
+if "current_file_bytes" not in st.session_state:
+    st.session_state.current_file_bytes = None
+if "output" not in st.session_state:
+    st.session_state.output = None
 
-if uploaded_file:
+with st.sidebar:
+    st.markdown("### 📥 Dữ liệu đầu vào")
+    uploaded_file = st.file_uploader("Tải lên tiêu bản H&E (jpg/png)", type=["jpg", "png"])
+    st.markdown("---")
+    st.markdown("**Trạng thái hệ thống:**")
+    st.success("✅ Mô hình GCN đã tải")
+    st.success("✅ Từ điển Gene đã tải")
+
+if uploaded_file is None:
+    st.info("👈 Vui lòng tải lên một ảnh vi thể H&E ở thanh bên trái để hệ thống bắt đầu phân tích tự động.")
+else:
     image = Image.open(uploaded_file).convert('RGB')
+    file_bytes = uploaded_file.getvalue()
     
-    if "analysis_done" not in st.session_state:
-        st.session_state.analysis_done = False
-
-    if st.sidebar.button("🚀 BẮT ĐẦU PHÂN TÍCH TỔNG LỰC", use_container_width=True):
-        with st.spinner('AI đang giải mã mạng lưới tế bào...'):
+    # TỰ ĐỘNG CHẠY KHI PHÁT HIỆN ẢNH MỚI
+    if st.session_state.current_file_bytes != file_bytes:
+        with st.spinner('🤖 Hệ thống đang phân tích đồ thị không gian...'):
             x, edge_index = run_pipeline(image)
             with torch.no_grad():
                 st.session_state.output = gcn_model(x, edge_index)
-            st.session_state.analysis_done = True
+        # Lưu lại ảnh hiện tại để không bị chạy lại khi bấm các nút khác
+        st.session_state.current_file_bytes = file_bytes 
 
-    if st.session_state.analysis_done:
-        st.markdown("### 🔍 Trung tâm Điều hành Phân tích Không gian")
-        
-        # CHỌN METAGENE ĐỂ HIỂN THỊ DYNAMIC
-        target_mg = st.selectbox(
-            "Chọn Siêu gene (Metagene) muốn hiển thị bản đồ nhiệt:", 
-            range(50), 
-            format_func=lambda x: f"Metagene {x} " + ("(Lõi khối u - PC0)" if x==0 else "")
-        )
+    # --- BẮT ĐẦU HIỂN THỊ KẾT QUẢ ---
+    # Thanh điều khiển trung tâm
+    st.markdown("### 🎛️ Bảng điều khiển Chẩn đoán")
+    target_mg = st.selectbox(
+        "Chọn Siêu gene (Metagene Pathway) để phân tích chi tiết:", 
+        range(50), 
+        format_func=lambda x: f"Metagene {x} " + ("- Core Tumor Boundary" if x==0 else "")
+    )
 
+    # Chia Tab để giao diện gọn gàng, hiện đại
+    tab1, tab2 = st.tabs(["🗺️ Bản đồ Không gian & Định lượng", "🧬 Giải mã XAI (Chi tiết Gene)"])
+
+    with tab1:
         col1, col2 = st.columns(2)
         
         with col1:
-            st.subheader("Ảnh đầu vào gốc")
+            st.markdown("**Ảnh đầu vào gốc (H&E)**")
             st.image(image, use_column_width=True)
 
         with col2:
-            st.subheader(f"Bản đồ nhiệt: Metagene {target_mg}")
-            # Xử lý heatmap động dựa trên lựa chọn
+            st.markdown(f"**Bản đồ phân bố Metagene {target_mg}**")
             vals = st.session_state.output[:, target_mg].numpy()
             norm = cv2.normalize(vals, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
             heatmap = cv2.resize(norm.reshape((6, 6)), (image.size[0], image.size[1]), interpolation=cv2.INTER_CUBIC)
@@ -144,30 +170,44 @@ if uploaded_file:
             overlay = cv2.addWeighted(np.array(image), 0.5, cv2.cvtColor(heatmap_color, cv2.COLOR_BGR2RGB), 0.5, 0)
             st.image(overlay, use_column_width=True)
 
-        # BIỂU ĐỒ PHÂN KỲ CHUẨN Y KHOA
         st.markdown("---")
-        st.subheader("🧬 Định lượng biểu hiện Top 5 Metagene cốt lõi")
+        st.markdown("**📊 Định lượng biểu hiện Top 5 Metagene cốt lõi (Toàn cảnh khối u)**")
+        
         mean_vals = st.session_state.output.mean(dim=0)[:5].numpy()
-        labels = ['PC0', 'MG 1', 'MG 2', 'MG 3', 'MG 4']
-        fig, ax = plt.subplots(figsize=(10, 3))
-        colors = ['#e74c3c' if v > 0 else '#3498db' for v in mean_vals]
-        bars = ax.bar(labels, mean_vals, color=colors)
-        ax.axhline(0, color='black', linewidth=1)
+        labels = ['PC0 (Core)', 'MG 1', 'MG 2', 'MG 3', 'MG 4']
+        
+        # Biểu đồ làm chuẩn học thuật (bỏ viền, thêm lưới)
+        fig, ax = plt.subplots(figsize=(10, 3.5))
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.grid(axis='y', linestyle='--', alpha=0.5)
+        
+        colors = ['#EF4444' if v > 0 else '#3B82F6' for v in mean_vals]
+        bars = ax.bar(labels, mean_vals, color=colors, width=0.6)
+        ax.axhline(0, color='black', linewidth=1.2)
+        
         for bar in bars:
             y = bar.get_height()
-            ax.text(bar.get_x()+bar.get_width()/2, y+(0.02 if y>0 else -0.05), f"{y:.2f}", ha='center', va='bottom' if y>0 else 'top', fontweight='bold')
+            ax.text(bar.get_x() + bar.get_width()/2, y + (0.05 if y > 0 else -0.1), 
+                    f"{y:.2f}", ha='center', va='bottom' if y > 0 else 'top', 
+                    fontweight='bold', fontsize=10, color='#333333')
         st.pyplot(fig)
 
-        # CHI TIẾT GENE (XAI) - ÁNH XẠ TÊN GENE
+    with tab2:
+        st.markdown(f"### Phân tích cấu trúc sinh học Metagene {target_mg}")
+        st.info("Các gene dưới đây có trọng số lớn nhất, định nghĩa chức năng sinh học lâm sàng của cụm Metagene này.")
+        
         if pca_model:
-            st.markdown("---")
-            with st.expander(f"🔬 Xem 10 Gene chủ đạo cấu thành Metagene {target_mg}"):
-                weights = pca_model.components_[target_mg]
-                top_idx = np.argsort(weights)[-10:][::-1]
+            weights = pca_model.components_[target_mg]
+            top_idx = np.argsort(weights)[-10:][::-1]
+            
+            # Sử dụng các thẻ st.metric để giao diện giống Dashboard phân tích số liệu
+            cols = st.columns(5)
+            for i, idx in enumerate(top_idx):
+                g_name = gene_mapping[idx] if gene_mapping else f"Gene ID: {idx}"
+                # Hiển thị dạng Metric card
+                cols[i % 5].metric(label=f"Top {i+1}", value=g_name, delta=f"Trọng số: {weights[idx]:.4f}")
                 
-                st.write(f"Các gene này định nghĩa chức năng sinh học của Metagene {target_mg}:")
-                cols = st.columns(5)
-                for i, idx in enumerate(top_idx):
-                    # HIỂN THỊ TÊN GENE THẬT NẾU CÓ MAPPING
-                    g_name = gene_mapping[idx] if gene_mapping else f"Gene ID: {idx}"
-                    cols[i % 5].success(f"**{g_name}**\n\nWeight: {weights[idx]:.4f}")
+            st.markdown("<br><br><p style='text-align: center; color: gray; font-size: 0.9rem;'>Hệ thống Explainable AI (XAI) tích hợp với dữ liệu chuẩn từ 10x Genomics.</p>", unsafe_allow_html=True)
+        else:
+            st.warning("⚠️ Không tìm thấy file PCA Model để giải mã tên Gene.")
